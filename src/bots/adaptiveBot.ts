@@ -2,8 +2,8 @@ import { Gamestate, BotSelection } from "../models/gamestate";
 
 class Bot {
     private maxDynamites = 100;
-    private window = 20;
-    private responseDelay = 2;
+    private window = 5;
+    private responseDelay = 0;
     private selectionDict = {
         0: 'R',
         1: 'P',
@@ -36,8 +36,9 @@ class Bot {
             return 'D';
         }
 
-        const runningCount = this.computeRunningCount(gamestate);
-        const maxIndex = runningCount.indexOf(Math.max(...runningCount));
+        const opponentsChoicesCount = this.computeRunningCount(gamestate);
+
+        const maxIndex = opponentsChoicesCount.indexOf(Math.max(...opponentsChoicesCount));
         
         const choice = this.winningSelectionDict[this.selectionDict[maxIndex]];
         if (choice === 'D' || choice === ' W') {
@@ -60,28 +61,31 @@ class Bot {
         return [p1DynamiteCount, p2DynamiteCount];
     }
 
-    private computeRunningCount(gamestate): number[] {
+    private computeRunningCount(gamestate: Gamestate): number[] {
         let [rockCount, paperCount, scissorCount, waterCount, dynamiteCount] = [0, 0, 0, 0, 0];
-        let [iterStart, iterEnd] = [
+        const [iterStart, iterEnd] = [
             Math.max(0, gamestate.rounds.length - this.window), 
             Math.max(0, gamestate.rounds.length - this.responseDelay)
         ];
+        const selection = gamestate.rounds[gamestate.rounds.length - 1].p1;
 
-        for (let i = iterStart; i < iterEnd; i++) {
-            if (gamestate.rounds[i].p2 === 'R') {
-                rockCount++;
-            }
-            if (gamestate.rounds[i].p2 === 'P') {
-                paperCount++;
-            }
-            if (gamestate.rounds[i].p2 === 'S') {
-                scissorCount++;
-            }
-            if (gamestate.rounds[i].p2 === 'W') {
-                waterCount++;
-            }
-            if (gamestate.rounds[i].p2 === 'D') {
-                dynamiteCount++;
+        for (let i = iterStart; i < iterEnd - 1; i++) {
+            if (gamestate.rounds[i].p1 === selection) {
+                if (gamestate.rounds[i + 1].p2 === 'R') {
+                    rockCount++;
+                }
+                if (gamestate.rounds[i + 1].p2 === 'P') {
+                    paperCount++;
+                }
+                if (gamestate.rounds[i + 1].p2 === 'S') {
+                    scissorCount++;
+                }
+                if (gamestate.rounds[i + 1].p2 === 'W') {
+                    waterCount++;
+                }
+                if (gamestate.rounds[i + 1].p2 === 'D') {
+                    dynamiteCount++;
+                }
             }
         }
         return [rockCount, paperCount, scissorCount, waterCount, dynamiteCount];
